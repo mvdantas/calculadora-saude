@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora Tributária Saúde RJ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: painel de premissas à esquerda, resultados (resumo → gráfico → tabelas) à direita */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#0f1e36; --muted:#5a6880; --line:#d9dfe9;
+  --navy:#14305e; --accent:#1f6fd1; --accent-soft:#e3eefc;
+  --good:#15803d; --warn:#b45309; --bad:#b91c1c;
+  --c-irpj:#14305e; --c-csll:#3d5f99; --c-pis:#8aa2c8; --c-iss:#d08a1e; --c-cbs:#1f9e8f; --c-ibs:#7cc9bd;
+  --display:"IBM Plex Sans", Arial, sans-serif; --body:"IBM Plex Sans", Arial, sans-serif; --mono:"IBM Plex Mono", ui-monospace, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b1322; --surface:#121d31; --ink:#e6ecf5; --muted:#9aa8bf; --line:#24324b;
+    --navy:#9cc0f5; --accent:#5ea0f2; --accent-soft:#16294a;
+    --good:#4ade80; --warn:#f2b45a; --bad:#f87171;
+    --c-irpj:#4f7fd0; --c-csll:#7499d6; --c-pis:#a9bddc; --c-iss:#e0a043; --c-cbs:#2fb5a4; --c-ibs:#8fd8cc;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b1322; --surface:#121d31; --ink:#e6ecf5; --muted:#9aa8bf; --line:#24324b;
+  --navy:#9cc0f5; --accent:#5ea0f2; --accent-soft:#16294a;
+  --good:#4ade80; --warn:#f2b45a; --bad:#f87171;
+  --c-irpj:#4f7fd0; --c-csll:#7499d6; --c-pis:#a9bddc; --c-iss:#e0a043; --c-cbs:#2fb5a4; --c-ibs:#8fd8cc;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+header{padding:28px 24px 8px;max-width:1320px;margin:0 auto;display:grid;gap:6px}
+h1{font-family:var(--display);font-size:26px;margin:0;color:var(--navy);text-wrap:balance;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0;max-width:75ch}
+.wrap{max-width:1320px;margin:0 auto;padding:16px 24px 48px;display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
+@media (max-width:960px){.wrap{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:18px}
+aside.panel{position:sticky;top:16px}
+@media (max-width:960px){aside.panel{position:static}}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0;font-weight:600}
+h3{font-size:17px;margin:0;color:var(--navy)}
+.group{display:grid;gap:10px}
+label{font-size:13px;font-weight:500;display:grid;gap:4px}
+.hint{font-size:12px;color:var(--muted);font-weight:400}
+input[type=number],select{font:inherit;font-family:var(--mono);font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
+select{font-family:var(--body)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:12.5px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+.check input{margin-top:3px}
+main{display:grid;gap:20px;min-width:0}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:760px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:2px}
+.tile .k{font-size:12px;color:var(--muted)}
+.tile .v{font-family:var(--mono);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tile.hl{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.pill{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:999px;font-family:var(--body)}
+.up{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.down{color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent)}
+.flat{color:var(--muted);background:color-mix(in srgb,var(--muted) 12%,transparent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:grid;gap:12px;min-width:0}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+#chart{width:100%;height:auto;display:block}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+td{font-family:var(--mono);font-size:13px}
+td:first-child{font-family:var(--body);font-weight:600}
+tr.total td{font-weight:600}
+tbody tr:hover{background:var(--accent-soft)}
+.phase{font-family:var(--body);font-size:11px;color:var(--muted);font-weight:400;display:block}
+.notes{font-size:13px;color:var(--muted);display:grid;gap:8px;max-width:95ch}
+.notes p{margin:0}
+.notes strong{color:var(--ink)}
+.warnbox{border-left:3px solid var(--warn);padding:8px 12px;background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:0 6px 6px 0;font-size:13px}
+footer{max-width:1320px;margin:0 auto;padding:0 24px 32px;color:var(--muted);font-size:12px}
+@media (prefers-reduced-motion:no-preference){.bar{transition:height .25s, y .25s}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Calculadora Tributária · Saúde · Lucro Presumido · Rio de Janeiro</h1>
+  <p class="sub">Estima a carga anual de IRPJ, CSLL, PIS, COFINS e ISS-Rio em 2026 e a transição para CBS e IBS (LC 214/2025) até 2033, com a redução de 60% para serviços de saúde do Anexo III e créditos sobre compras.</p>
+</header>
+
+<div class="wrap">
+<aside class="panel" aria-label="Premissas">
+  <div class="group">
+    <h2>Perfil rápido</h2>
+    <div class="chips" role="group" aria-label="Perfis">
+      <button class="chip" type="button" data-preset="internacao" aria-pressed="true">Clínica com internação</button>
+      <button class="chip" type="button" data-preset="diagnostico" aria-pressed="false">Diagnóstico / laboratório</button>
+      <button class="chip" type="button" data-preset="consultorio" aria-pressed="false">Clínica médica / consultas</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <h2>Empresa</h2>
+    <label for="receita">Receita bruta anual de serviços (R$)
+      <input type="number" id="receita" min="0" step="10000" value="6000000">
+      <span class="hint">Valor dos serviços sem CBS/IBS. Supõe receita uniforme nos 4 trimestres.</span>
+    </label>
+    <label for="atividade">Presunção IRPJ / CSLL
+      <select id="atividade">
+        <option value="hosp">Serviços hospitalares e equiparados · 8% / 12%</option>
+        <option value="geral">Serviços em geral (consultas, médicos) · 32% / 32%</option>
+      </select>
+      <span class="hint">8%/12% exige sociedade empresária e normas da Anvisa; consultas simples ficam em 32%.</span>
+    </label>
+    <label class="check"><input type="checkbox" id="lc224" checked>
+      <span>Aplicar o acréscimo de 10% da LC 224/2025 na receita acima de R$ 5 mi/ano <span class="hint">(IRPJ desde jan/2026, CSLL desde abr/2026)</span></span>
+    </label>
+  </div>
+
+  <div class="group">
+    <h2>ISS · Município do Rio</h2>
+    <label for="issModo">Enquadramento
+      <select id="issModo">
+        <option value="2">2% · hospital/clínica apta a internar (subitem 4.03)</option>
+        <option value="5">5% · demais serviços de saúde</option>
+        <option value="outra">Outra alíquota</option>
+        <option value="fixo">Valor fixo anual · sociedade uniprofissional</option>
+      </select>
+    </label>
+    <label for="issOutra" id="issOutraWrap" hidden>Alíquota de ISS (%)
+      <input type="number" id="issOutra" min="2" max="5" step="0.1" value="3">
+    </label>
+    <label for="issFixo" id="issFixoWrap" hidden>ISS fixo anual (R$)
+      <input type="number" id="issFixo" min="0" step="100" value="12000">
+    </label>
+  </div>
+
+  <div class="group">
+    <h2>Compras com crédito de CBS/IBS (anual)</h2>
+    <label for="comprasPadrao">Bens e serviços à alíquota padrão (R$)
+      <input type="number" id="comprasPadrao" min="0" step="10000" value="900000">
+      <span class="hint">Aluguel, energia, terceirizados, TI, manutenção. Não inclui folha.</span>
+    </label>
+    <label for="comprasSaude">Medicamentos e dispositivos médicos com redução de 60% (R$)
+      <input type="number" id="comprasSaude" min="0" step="10000" value="500000">
+    </label>
+  </div>
+
+  <div class="group">
+    <h2>Alíquotas de referência</h2>
+    <div class="row2">
+      <label for="cbsRef">CBS (%)
+        <input type="number" id="cbsRef" min="0" step="0.1" value="11.3">
+      </label>
+      <label for="ibsRef">IBS (%)
+        <input type="number" id="ibsRef" min="0" step="0.1" value="17.7">
+      </label>
+    </div>
+    <span class="hint">CBS 11,3%: cálculo do TCU para 2027, a ser fixado pelo Senado até 15/12/2026. IBS 17,7%: estimativa, ainda sem cálculo oficial.</span>
+  </div>
+</aside>
+
+<main>
+  <section class="tiles" aria-label="Resumo">
+    <div class="tile"><span class="k">Tributos 2026 (regime atual)</span><span class="v" id="t2026">–</span><span class="s" id="t2026s">–</span></div>
+    <div class="tile"><span class="k">Tributos 2027 (CBS no lugar de PIS/COFINS)</span><span class="v" id="t2027">–</span><span class="s" id="t2027s">–</span></div>
+    <div class="tile hl"><span class="k">Tributos 2033 (IBS pleno, sem ISS)</span><span class="v" id="t2033">–</span><span class="s" id="t2033s">–</span></div>
+    <div class="tile"><span class="k">Variação 2033 vs 2026</span><span class="v" id="tdelta">–</span><span class="s" id="tdeltas">–</span></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h3>Carga tributária sobre a receita, por ano</h3>
+      <div class="legend">
+        <span><i style="background:var(--c-irpj)"></i>IRPJ</span>
+        <span><i style="background:var(--c-csll)"></i>CSLL</span>
+        <span><i style="background:var(--c-pis)"></i>PIS/COFINS</span>
+        <span><i style="background:var(--c-iss)"></i>ISS</span>
+        <span><i style="background:var(--c-cbs)"></i>CBS líquida</span>
+        <span><i style="background:var(--c-ibs)"></i>IBS líquido</span>
+      </div>
+    </div>
+    <svg id="chart" viewBox="0 0 860 300" role="img" aria-label="Carga tributária por ano, empilhada por tributo"></svg>
+  </section>
+
+  <section class="card">
+    <h3>Tributos por ano (R$)</h3>
+    <div class="scroll">
+      <table id="tabAnual">
+        <thead><tr><th>Ano</th><th>IRPJ</th><th>CSLL</th><th>PIS/COFINS</th><th>ISS</th><th>CBS líq.</th><th>IBS líq.</th><th>Total</th><th>Carga</th><th>Por mês</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>CBS e IBS: alíquotas aplicadas, débitos e créditos</h3>
+    <div class="scroll">
+      <table id="tabIva">
+        <thead><tr><th>Ano</th><th>CBS saúde</th><th>IBS saúde</th><th>Fator ISS</th><th>Débito CBS+IBS</th><th>Crédito compras</th><th>Saldo a pagar</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="warnbox" id="credorMsg" hidden>Em algum ano os créditos superam os débitos. O saldo credor aparece como zero aqui; na prática ele pode ser compensado ou ressarcido.</p>
+  </section>
+
+  <section class="card">
+    <h3>Premissas e limites</h3>
+    <div class="notes">
+      <p><strong>Lucro presumido.</strong> IRPJ de 15% mais adicional de 10% sobre a base que exceder R$ 60 mil por trimestre; CSLL de 9%. Com a LC 224/2025, a parcela da receita acima de R$ 1,25 mi por trimestre usa presunção 10% maior (8% → 8,8%; 12% → 13,2%; 32% → 35,2%). Há liminares suspendendo esse acréscimo para alguns contribuintes; desmarque a opção para simular sem ele.</p>
+      <p><strong>Regime atual (2026).</strong> PIS 0,65% e COFINS 3% cumulativos, sem crédito. A CBS de 0,9% e o IBS de 0,1% de 2026 são de teste: quem cumpre as obrigações acessórias fica dispensado do recolhimento, por isso entram como zero.</p>
+      <p><strong>Transição.</strong> 2027–2028: PIS/COFINS extintos, CBS = referência − 0,1 p.p., IBS de 0,1%. 2029–2032: ISS a 90%, 80%, 70% e 60% da alíquota, IBS a 10%, 20%, 30% e 40% da referência. 2033: ISS extinto, IBS pleno. Serviços de saúde do Anexo III pagam 40% das alíquotas (redução de 60%).</p>
+      <p><strong>CBS/IBS por fora.</strong> Os valores supõem preço do serviço inalterado e CBS/IBS calculados sobre ele. Se a clínica não conseguir repassar ao paciente ou à operadora, o imposto sai da margem. Créditos só existem para compras de fornecedores do regime regular; fornecedores do Simples geram crédito menor. Folha de pagamento não gera crédito.</p>
+      <p><strong>Não considerados.</strong> Receitas financeiras e outras receitas, retenções na fonte, split payment, variações de receita ao longo do ano, reajustes e o Imposto Seletivo (não incide sobre serviços de saúde). Esta é uma estimativa para planejamento, não substitui a apuração do contador.</p>
+    </div>
+  </section>
+</main>
+</div>
+<footer>Fontes: LC 214/2025 (arts. 128, 130, 343–348; Anexo III), LC 224/2025, Lei 691/1984 (CTM-RJ, art. 33), TCU (alíquota de referência da CBS, 28/10/2026). Valores atualizados em novembro de 2026.</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const pct = (v,d=2) => (v*100).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';
+const ANOS = [2026,2027,2028,2029,2030,2031,2032,2033];
+const FASE = {2026:'teste',2027:'CBS',2028:'CBS',2029:'transição',2030:'transição',2031:'transição',2032:'transição',2033:'pleno'};
+const ISS_FATOR = {2026:1,2027:1,2028:1,2029:.9,2030:.8,2031:.7,2032:.6,2033:0};
+const IBS_FRAC = {2029:.1,2030:.2,2031:.3,2032:.4,2033:1};
+const PRESETS = {
+  internacao:{atividade:'hosp',issModo:'2'},
+  diagnostico:{atividade:'hosp',issModo:'5'},
+  consultorio:{atividade:'geral',issModo:'5'}
+};
+
+function num(id){const v=parseFloat($(id).value);return isFinite(v)&&v>0?v:0}
+
+function irpjCsll(R, atividade, lc224, ano){
+  const p = atividade==='hosp' ? {ir:.08,cs:.12} : {ir:.32,cs:.32};
+  const Rq = R/4, lim = 1250000;
+  let ir=0, cs=0;
+  for(let q=1;q<=4;q++){
+    const base = Math.min(Rq,lim), exc = Math.max(0,Rq-lim);
+    const majIR = lc224 ? 1.1 : 1;
+    const majCS = lc224 && !(ano===2026 && q===1) ? 1.1 : 1; // CSLL: noventena, só a partir de abr/2026
+    const bIR = base*p.ir + exc*p.ir*majIR;
+    const bCS = base*p.cs + exc*p.cs*majCS;
+    ir += bIR*.15 + Math.max(0,bIR-60000)*.10;
+    cs += bCS*.09;
+  }
+  return {ir,cs};
+}
+
+function calcular(){
+  const R = num('receita');
+  const atividade = $('atividade').value;
+  const lc224 = $('lc224').checked;
+  const modo = $('issModo').value;
+  const cP = num('comprasPadrao'), cS = num('comprasSaude');
+  const cbsRef = num('cbsRef')/100, ibsRef = num('ibsRef')/100;
+  return ANOS.map(ano=>{
+    const {ir,cs} = irpjCsll(R,atividade,lc224,ano);
+    const pis = ano===2026 ? R*.0365 : 0;
+    let issBase = modo==='fixo' ? num('issFixo') : R*(modo==='outra' ? num('issOutra') : parseFloat(modo))/100;
+    const iss = issBase*ISS_FATOR[ano];
+    let cbsStd=0, ibsStd=0;
+    if(ano===2027||ano===2028){cbsStd=Math.max(0,cbsRef-.001); ibsStd=.001;}
+    else if(ano>=2029){cbsStd=cbsRef; ibsStd=ibsRef*IBS_FRAC[ano];}
+    const cbsS=cbsStd*.4, ibsS=ibsStd*.4;
+    const deb = R*(cbsS+ibsS);
+    const cred = cP*(cbsStd+ibsStd) + cS*(cbsS+ibsS);
+    const credCbs = cP*cbsStd + cS*cbsS, credIbs = cP*ibsStd + cS*ibsS;
+    const cbs = Math.max(0,R*cbsS-credCbs), ibs = Math.max(0,R*ibsS-credIbs);
+    const credor = ano>2026 && (R*cbsS<credCbs || R*ibsS<credIbs);
+    const total = ir+cs+pis+iss+cbs+ibs;
+    return {ano,ir,cs,pis,iss,cbs,ibs,total,carga:R?total/R:0,cbsS,ibsS,deb,cred,credor,fator:ISS_FATOR[ano],testeCbs:ano===2026};
+  });
+}
+
+function delta(a,b){
+  if(!a) return '<span class="pill flat">–</span>';
+  const d=(b-a)/a;
+  const cls = Math.abs(d)<.005?'flat':(d>0?'up':'down');
+  return `<span class="pill ${cls}">${d>0?'+':''}${(d*100).toLocaleString('pt-BR',{maximumFractionDigits:1})}%</span>`;
+}
+
+function render(){
+  const r = calcular();
+  const by = Object.fromEntries(r.map(x=>[x.ano,x]));
+  const set=(id,v)=>$(id).innerHTML=v;
+  set('t2026',brl(by[2026].total)); set('t2026s',`${pct(by[2026].carga)} da receita · ${brl(by[2026].total/12)}/mês`);
+  set('t2027',brl(by[2027].total)); set('t2027s',`${pct(by[2027].carga)} da receita ${delta(by[2026].total,by[2027].total)}`);
+  set('t2033',brl(by[2033].total)); set('t2033s',`${pct(by[2033].carga)} da receita · ${brl(by[2033].total/12)}/mês`);
+  const d = by[2033].total-by[2026].total;
+  set('tdelta',(d>=0?'+':'−')+brl(Math.abs(d)).replace('-','')); set('tdeltas',`por ano ${delta(by[2026].total,by[2033].total)}`);
+
+  $('tabAnual').querySelector('tbody').innerHTML = r.map(x=>`<tr>
+    <td>${x.ano}<span class="phase">${FASE[x.ano]}</span></td>
+    <td>${brl(x.ir)}</td><td>${brl(x.cs)}</td><td>${brl(x.pis)}</td><td>${brl(x.iss)}</td>
+    <td>${brl(x.cbs)}</td><td>${brl(x.ibs)}</td><td><strong>${brl(x.total)}</strong></td><td>${pct(x.carga)}</td><td>${brl(x.total/12)}</td></tr>`).join('');
+
+  $('tabIva').querySelector('tbody').innerHTML = r.map(x=>x.testeCbs
+    ? `<tr><td>2026<span class="phase">teste</span></td><td>0,90%*</td><td>0,10%*</td><td>100%</td><td colspan="3" style="text-align:left;font-family:var(--body);color:var(--muted)">* Destaque na nota; recolhimento dispensado</td></tr>`
+    : `<tr><td>${x.ano}<span class="phase">${FASE[x.ano]}</span></td><td>${pct(x.cbsS,3)}</td><td>${pct(x.ibsS,3)}</td><td>${Math.round(x.fator*100)}%</td>
+       <td>${brl(x.deb)}</td><td>${brl(x.cred)}</td><td>${brl(x.cbs+x.ibs)}</td></tr>`).join('');
+  $('credorMsg').hidden = !r.some(x=>x.credor);
+
+  drawChart(r);
+}
+
+function drawChart(r){
+  const svg=$('chart'), W=860, H=300, L=48, Rm=12, T=16, B=40;
+  const css=getComputedStyle(document.documentElement);
+  const col=k=>css.getPropertyValue(k).trim();
+  const keys=[['ir','--c-irpj'],['cs','--c-csll'],['pis','--c-pis'],['iss','--c-iss'],['cbs','--c-cbs'],['ibs','--c-ibs']];
+  const R=num('receita')||1;
+  const maxC=Math.max(...r.map(x=>x.carga),.01);
+  const step = maxC>.2?.05:(maxC>.1?.025:.01);
+  const top=Math.ceil(maxC/step)*step;
+  const y=v=>T+(H-T-B)*(1-v/top);
+  const bw=(W-L-Rm)/r.length, barW=Math.min(56,bw*.58);
+  let s='';
+  for(let v=0; v<=top+1e-9; v+=step){
+    s+=`<line x1="${L}" x2="${W-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="${col('--line')}" stroke-width="1"/>`;
+    s+=`<text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="${col('--muted')}" font-family="IBM Plex Mono, monospace">${(v*100).toLocaleString('pt-BR',{maximumFractionDigits:1})}%</text>`;
+  }
+  r.forEach((x,i)=>{
+    const cx=L+bw*i+bw/2; let acc=0;
+    keys.forEach(([k,c])=>{
+      const v=x[k]/R; if(v<=0) return;
+      const y0=y(acc+v), h=y(acc)-y(acc+v);
+      s+=`<rect class="bar" x="${cx-barW/2}" y="${y0}" width="${barW}" height="${Math.max(0,h)}" fill="${col(c)}"><title>${x.ano} · ${k.toUpperCase()}: ${brl(x[k])}</title></rect>`;
+      acc+=v;
+    });
+    s+=`<text x="${cx}" y="${y(acc)-6}" text-anchor="middle" font-size="11.5" font-weight="600" fill="${col('--ink')}" font-family="IBM Plex Mono, monospace">${pct(x.carga,1)}</text>`;
+    s+=`<text x="${cx}" y="${H-B+18}" text-anchor="middle" font-size="12" fill="${col('--muted')}" font-family="IBM Plex Sans, Arial">${x.ano}</text>`;
+  });
+  svg.innerHTML=s;
+}
+
+function syncIss(){
+  const m=$('issModo').value;
+  $('issOutraWrap').hidden = m!=='outra';
+  $('issFixoWrap').hidden = m!=='fixo';
+}
+
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
+  const p=PRESETS[b.dataset.preset];
+  $('atividade').value=p.atividade; $('issModo').value=p.issModo;
+  document.querySelectorAll('[data-preset]').forEach(o=>o.setAttribute('aria-pressed',o===b?'true':'false'));
+  syncIss(); render();
+}));
+document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',()=>{
+  if(el.id==='atividade'||el.id==='issModo') document.querySelectorAll('[data-preset]').forEach(o=>o.setAttribute('aria-pressed','false'));
+  syncIss(); render();
+}));
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',render);
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+syncIss(); render();
+</script>
+</body>
+</html>
