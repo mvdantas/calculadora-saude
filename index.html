@@ -108,7 +108,8 @@ footer{max-width:1320px;margin:0 auto;padding:0 24px 32px;color:var(--muted);fon
     <div class="chips" role="group" aria-label="Perfis">
       <button class="chip" type="button" data-preset="internacao" aria-pressed="true">Clínica com internação</button>
       <button class="chip" type="button" data-preset="diagnostico" aria-pressed="false">Diagnóstico / laboratório</button>
-      <button class="chip" type="button" data-preset="consultorio" aria-pressed="false">Clínica médica / consultas</button>
+      <button class="chip" type="button" data-preset="ambulatorio" aria-pressed="false">Ambulatório: consultas e procedimentos</button>
+      <button class="chip" type="button" data-preset="consultorio" aria-pressed="false">Só consultas</button>
     </div>
   </div>
 
@@ -118,12 +119,9 @@ footer{max-width:1320px;margin:0 auto;padding:0 24px 32px;color:var(--muted);fon
       <input type="number" id="receita" min="0" step="10000" value="6000000">
       <span class="hint">Valor dos serviços sem CBS/IBS. Supõe receita uniforme nos 4 trimestres.</span>
     </label>
-    <label for="atividade">Presunção IRPJ / CSLL
-      <select id="atividade">
-        <option value="hosp">Serviços hospitalares e equiparados · 8% / 12%</option>
-        <option value="geral">Serviços em geral (consultas, médicos) · 32% / 32%</option>
-      </select>
-      <span class="hint">8%/12% exige sociedade empresária e normas da Anvisa; consultas simples ficam em 32%.</span>
+    <label for="eqPct">Receita com equiparação hospitalar: <span id="eqPctOut" style="font-family:var(--mono)">85%</span>
+      <input type="range" id="eqPct" min="0" max="100" step="5" value="85">
+      <span class="hint">Parcela presumida a 8% (IRPJ) e 12% (CSLL). O restante, como consultas, fica em 32% / 32%.</span>
     </label>
     <label class="check"><input type="checkbox" id="lc224" checked>
       <span>Aplicar o acréscimo de 10% da LC 224/2025 na receita acima de R$ 5 mi/ano <span class="hint">(IRPJ desde jan/2026, CSLL desde abr/2026)</span></span>
@@ -181,6 +179,20 @@ footer{max-width:1320px;margin:0 auto;padding:0 24px 32px;color:var(--muted);fon
     <div class="tile"><span class="k">Variação 2033 vs 2026</span><span class="v" id="tdelta">–</span><span class="s" id="tdeltas">–</span></div>
   </section>
 
+  <section class="card" aria-label="Impacto da equiparação hospitalar">
+    <div class="card-head">
+      <h3>Impacto da equiparação hospitalar no IRPJ e na CSLL</h3>
+      <span class="hint" id="eqResumo">–</span>
+    </div>
+    <div class="tiles">
+      <div class="tile"><span class="k">IRPJ + CSLL sem equiparação</span><span class="v" id="eqSem">–</span><span class="s" id="eqSemS">–</span></div>
+      <div class="tile"><span class="k">IRPJ + CSLL com equiparação</span><span class="v" id="eqCom">–</span><span class="s" id="eqComS">–</span></div>
+      <div class="tile hl"><span class="k">Economia por ano</span><span class="v" id="eqEco">–</span><span class="s" id="eqEcoS">–</span></div>
+      <div class="tile"><span class="k">Economia acumulada 2026–2033</span><span class="v" id="eqAcum">–</span><span class="s">a reforma do consumo não muda o IRPJ/CSLL</span></div>
+    </div>
+    <p class="hint" style="margin:0" id="eqPorPonto">–</p>
+  </section>
+
   <section class="card">
     <div class="card-head">
       <h3>Carga tributária sobre a receita, por ano</h3>
@@ -221,6 +233,7 @@ footer{max-width:1320px;margin:0 auto;padding:0 24px 32px;color:var(--muted);fon
     <h3>Premissas e limites</h3>
     <div class="notes">
       <p><strong>Lucro presumido.</strong> IRPJ de 15% mais adicional de 10% sobre a base que exceder R$ 60 mil por trimestre; CSLL de 9%. Com a LC 224/2025, a parcela da receita acima de R$ 1,25 mi por trimestre usa presunção 10% maior (8% → 8,8%; 12% → 13,2%; 32% → 35,2%). Há liminares suspendendo esse acréscimo para alguns contribuintes; desmarque a opção para simular sem ele.</p>
+      <p><strong>Equiparação hospitalar.</strong> A presunção de 8% (IRPJ) e 12% (CSLL) vale para serviços hospitalares e de auxílio diagnóstico e terapia, patologia clínica, imagenologia, anatomia patológica e citopatologia, medicina nuclear e análises clínicas (Lei 9.249/1995, art. 15, § 1º, III, "a"). Exige sociedade empresária, de fato e de direito, que cumpra as normas da Anvisa (IN RFB 1.700/2017, art. 33). O STJ adota critério objetivo, pela natureza do serviço, e exclui as consultas médicas (REsp 1.116.399, Tema 217). Por isso a equiparação costuma valer só para parte da receita, e a empresa precisa separar contabilmente as receitas por natureza. O acréscimo da LC 224 é rateado entre as duas parcelas, na proporção de cada uma; o adicional de 10% do IRPJ incide sobre a base somada.</p>
       <p><strong>Regime atual (2026).</strong> PIS 0,65% e COFINS 3% cumulativos, sem crédito. A CBS de 0,9% e o IBS de 0,1% de 2026 são de teste: quem cumpre as obrigações acessórias fica dispensado do recolhimento, por isso entram como zero.</p>
       <p><strong>Transição.</strong> 2027–2028: PIS/COFINS extintos, CBS = referência − 0,1 p.p., IBS de 0,1%. 2029–2032: ISS a 90%, 80%, 70% e 60% da alíquota, IBS a 10%, 20%, 30% e 40% da referência. 2033: ISS extinto, IBS pleno. Serviços de saúde do Anexo III pagam 40% das alíquotas (redução de 60%).</p>
       <p><strong>CBS/IBS por fora.</strong> Os valores supõem preço do serviço inalterado e CBS/IBS calculados sobre ele. Se a clínica não conseguir repassar ao paciente ou à operadora, o imposto sai da margem. Créditos só existem para compras de fornecedores do regime regular; fornecedores do Simples geram crédito menor. Folha de pagamento não gera crédito.</p>
@@ -240,15 +253,17 @@ const FASE = {2026:'teste',2027:'CBS',2028:'CBS',2029:'transição',2030:'transi
 const ISS_FATOR = {2026:1,2027:1,2028:1,2029:.9,2030:.8,2031:.7,2032:.6,2033:0};
 const IBS_FRAC = {2029:.1,2030:.2,2031:.3,2032:.4,2033:1};
 const PRESETS = {
-  internacao:{atividade:'hosp',issModo:'2'},
-  diagnostico:{atividade:'hosp',issModo:'5'},
-  consultorio:{atividade:'geral',issModo:'5'}
+  internacao:{eq:85,issModo:'2'},
+  diagnostico:{eq:95,issModo:'5'},
+  ambulatorio:{eq:40,issModo:'5'},
+  consultorio:{eq:0,issModo:'5'}
 };
 
 function num(id){const v=parseFloat($(id).value);return isFinite(v)&&v>0?v:0}
 
-function irpjCsll(R, atividade, lc224, ano){
-  const p = atividade==='hosp' ? {ir:.08,cs:.12} : {ir:.32,cs:.32};
+function irpjCsll(R, eq, lc224, ano){
+  // eq = fração da receita com equiparação hospitalar; presunção média ponderada
+  const p = {ir:eq*.08+(1-eq)*.32, cs:eq*.12+(1-eq)*.32};
   const Rq = R/4, lim = 1250000;
   let ir=0, cs=0;
   for(let q=1;q<=4;q++){
@@ -263,15 +278,17 @@ function irpjCsll(R, atividade, lc224, ano){
   return {ir,cs};
 }
 
-function calcular(){
+function eqAtual(){ return num('eqPct')/100; }
+
+function calcular(eqOverride){
   const R = num('receita');
-  const atividade = $('atividade').value;
+  const eq = eqOverride===undefined ? eqAtual() : eqOverride;
   const lc224 = $('lc224').checked;
   const modo = $('issModo').value;
   const cP = num('comprasPadrao'), cS = num('comprasSaude');
   const cbsRef = num('cbsRef')/100, ibsRef = num('ibsRef')/100;
   return ANOS.map(ano=>{
-    const {ir,cs} = irpjCsll(R,atividade,lc224,ano);
+    const {ir,cs} = irpjCsll(R,eq,lc224,ano);
     const pis = ano===2026 ? R*.0365 : 0;
     let issBase = modo==='fixo' ? num('issFixo') : R*(modo==='outra' ? num('issOutra') : parseFloat(modo))/100;
     const iss = issBase*ISS_FATOR[ano];
@@ -305,6 +322,21 @@ function render(){
   set('t2033',brl(by[2033].total)); set('t2033s',`${pct(by[2033].carga)} da receita · ${brl(by[2033].total/12)}/mês`);
   const d = by[2033].total-by[2026].total;
   set('tdelta',(d>=0?'+':'−')+brl(Math.abs(d)).replace('-','')); set('tdeltas',`por ano ${delta(by[2026].total,by[2033].total)}`);
+
+  // Impacto da equiparação: mesmo cenário com 0% e com 100% da receita equiparada
+  const R = num('receita'), eq = eqAtual();
+  const sem = calcular(0), tot = calcular(1);
+  const ircs = x => x.ir + x.cs;
+  const s26 = ircs(sem[0]), c26 = ircs(by[2026]);
+  set('eqSem', brl(s26)); set('eqSemS', `${pct(R? s26/R:0)} da receita · 32% / 32%`);
+  set('eqCom', brl(c26)); set('eqComS', `${pct(R? c26/R:0)} da receita · ${Math.round(eq*100)}% equiparada`);
+  set('eqEco', brl(s26-c26)); set('eqEcoS', `${brl((s26-c26)/12)}/mês ${delta(s26,c26)}`);
+  const acum = r.reduce((a,x,i)=>a + ircs(sem[i]) - ircs(x), 0);
+  set('eqAcum', brl(acum));
+  const max26 = s26 - ircs(tot[0]);
+  set('eqResumo', `${Math.round(eq*100)}% da receita com 8% / 12%`);
+  set('eqPorPonto', `Cada 10 pontos percentuais de receita equiparada valem cerca de ${brl(max26/10)} por ano. Com 100% de equiparação, a economia seria de ${brl(max26)} por ano.`);
+  $('eqPctOut').textContent = Math.round(eq*100)+'%';
 
   $('tabAnual').querySelector('tbody').innerHTML = r.map(x=>`<tr>
     <td>${x.ano}<span class="phase">${FASE[x.ano]}</span></td>
@@ -358,12 +390,12 @@ function syncIss(){
 
 document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{
   const p=PRESETS[b.dataset.preset];
-  $('atividade').value=p.atividade; $('issModo').value=p.issModo;
+  $('eqPct').value=p.eq; $('issModo').value=p.issModo;
   document.querySelectorAll('[data-preset]').forEach(o=>o.setAttribute('aria-pressed',o===b?'true':'false'));
   syncIss(); render();
 }));
 document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',()=>{
-  if(el.id==='atividade'||el.id==='issModo') document.querySelectorAll('[data-preset]').forEach(o=>o.setAttribute('aria-pressed','false'));
+  if(el.id==='eqPct'||el.id==='issModo') document.querySelectorAll('[data-preset]').forEach(o=>o.setAttribute('aria-pressed','false'));
   syncIss(); render();
 }));
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',render);
